@@ -79,3 +79,111 @@ begin
 ```SQL
 select obter_id_curso('Matemática','ciencia da computação');
 ```
+## 5- Crie uma procedure que recebe os dados do aluno e de um curso e faz sua matrícula;
+```SQL
+DELIMITER $ 
+CREATE PROCEDURE matricular_aluno_novo(
+in nome_aluno varchar (100),
+in ra_aluno varchar (100),
+in email_aluno varchar(100),
+in nome_curso varchar(100)
+)
+begin
+	declare id_curso int;
+    
+    select idcurso into id_curso
+    from curso
+    where diciplina = nome_curso;
+    insert into aluno (nome,sobrenome,RA,email,cursos_idcursos)
+    values (nome_aluno,ra_aluno,email_aluno,id_curso);
+    end$
+    delimiter ;
+```
+## CALL NA TABELA
+```SQL
+CALL matricular_aluno('nome do novo aluno', 'ra', 'email','nome do curso'); 
+```
+## 6- Caso o aluno já esteja matriculado em um curso, essa matrícula não pode ser realizada;
+```SQL
+delimiter $
+CREATE PROCEDURE matricular_aluno_novo(
+in nome_aluno varchar (100),
+in ra_aluno varchar (100),
+in email_aluno varchar(100),
+in nome_curso varchar(100)
+)
+begin
+	declare id_curso int;
+    
+    select idcurso into id_curso
+    from curso
+    where diciplina = nome_curso;
+    
+    IF EXISTS (select 1 from aluno where ra = ra_aluno and curso_idcurso = id_curso) then 
+    signal sqlstate '4500'
+    set message_text = 'aluno ja matriculado.';
+    else 
+    insert into aluno (nome,sobrenome,RA,email,curso_idcurso)
+    values (nome_aluno,ra_aluno,email_aluno,id_curso);
+    end if;
+    end$
+    
+    delimiter ;
+```
+## CHAMANDO A FUNÇÃO
+```SQL
+CALL matricular_aluno('nome do novo aluno', 'ra', 'email','nome do curso');
+```
+
+## 7 Crie o modelo lógico do exercício.
+```SQL
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema Universidade
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema Universidade
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `Universidade` DEFAULT CHARACTER SET utf8 ;
+USE `Universidade` ;
+
+-- -----------------------------------------------------
+-- Table `Universidade`.`aluno`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Universidade`.`aluno` (
+  `id_aluno` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nome` VARCHAR(100) NULL,
+  `RA` VARCHAR(100) NULL,
+  `email` VARCHAR(100) NULL,
+  PRIMARY KEY (`id_aluno`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Universidade`.`curso`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Universidade`.`curso` (
+  `id_curso` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `diciplina` VARCHAR(100) NULL,
+  `aluno_id_aluno` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id_curso`, `aluno_id_aluno`),
+  INDEX `fk_curso_aluno_idx` (`aluno_id_aluno` ASC) VISIBLE,
+  CONSTRAINT `fk_curso_aluno`
+    FOREIGN KEY (`aluno_id_aluno`)
+    REFERENCES `Universidade`.`aluno` (`id_aluno`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+
+```
